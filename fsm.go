@@ -7,6 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	Finite = "Finite"
+)
+
 type Event struct {
 	Name string
 	Data interface{}
@@ -30,7 +34,7 @@ type FiniteState struct {
 }
 
 func (s FiniteState) Run(last State) (State, string) {
-	return s, "Finite"
+	return s, Finite
 }
 
 func (s FiniteState) Compare(to State) bool {
@@ -38,7 +42,7 @@ func (s FiniteState) Compare(to State) bool {
 }
 
 func (s FiniteState) String() string {
-	return "Finite"
+	return Finite
 }
 
 func NewFiniteState(fsm *FSM) *FiniteState {
@@ -78,6 +82,10 @@ func (fsm *FSM) SetIdleState(state State) error {
 
 	fsm.state = state
 	return nil
+}
+
+func (fsm *FSM) State() State {
+	return fsm.state
 }
 
 func (fsm *FSM) Run() {
