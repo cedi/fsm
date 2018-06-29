@@ -50,12 +50,15 @@ func NewFiniteState(fsm *FSM) *FiniteState {
 }
 
 type FSM struct {
-	Events chan Event
-	errs   chan error
-	state  State
-	rules  *FsmRules
-	log    bool
-	mu     sync.RWMutex
+	errs  chan error
+	state State
+	rules *FsmRules
+	log   bool
+	mu    sync.RWMutex
+
+	// Event-Handling
+	InEvents  chan Event
+	OutEvents chan Event
 }
 
 func NewLoggingFSM(rules *FsmRules) *FSM {
@@ -68,10 +71,11 @@ func NewNonLoggingFSM(rules *FsmRules) *FSM {
 
 func NewFSM(rules *FsmRules, log bool) *FSM {
 	return &FSM{
-		Events: make(chan Event),
-		errs:   make(chan error),
-		rules:  rules,
-		log:    log,
+		InEvents:  make(chan Event),
+		OutEvents: make(chan Event),
+		errs:      make(chan error),
+		rules:     rules,
+		log:       log,
 	}
 }
 
