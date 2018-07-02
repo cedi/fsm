@@ -11,16 +11,26 @@ const (
 	Finite = "Finite"
 )
 
+// Event
 type Event struct {
+	// Name of the Event
 	Name string
+
+	// Payload
 	Data interface{}
 }
 
+func (e Event) Compare(to Event) bool {
+	return e.Name == to.Name
+}
+
+// Generic State Interface
 type State interface {
 	// Execute the work in this State.
 	// To transition into the next state, return the new state and give a reason
-	// last: the previous state. For the initial state: empty
-	Run(last State) (State, string)
+	// lastS: the previous state. For the initial state: empty
+	// lastE: the previous Event. For the initial state: empty
+	Run(lastS State, lastE Event) (State, Event, string)
 
 	// MUST return true if "to" is the same state
 	Compare(to State) bool
@@ -33,8 +43,8 @@ type FiniteState struct {
 	fsm *FSM
 }
 
-func (s FiniteState) Run(last State) (State, string) {
-	return s, Finite
+func (s FiniteState) Run(lastS State, lastE Event) (State, Event, string) {
+	return s, Event{}, Finite
 }
 
 func (s FiniteState) Compare(to State) bool {
@@ -94,15 +104,17 @@ func (fsm *FSM) State() State {
 
 func (fsm *FSM) Run() {
 	var last State
+	var evnt Event
 	finiteState := NewFiniteState(fsm)
 
 	for {
-		next, reason := fsm.state.Run(last)
+		next, evnt, reason := fsm.state.Run(last, evnt)
 		if next.Compare(finiteState) {
 			if fsm.log {
 				log.WithFields(log.Fields{
 					"current_state": fsm.state.String(),
 					"new_state":     next.String(),
+					"event":         evnt.Name,
 					"reason":        reason,
 				}).Info("Finite")
 			}
@@ -115,6 +127,7 @@ func (fsm *FSM) Run() {
 				log.WithFields(log.Fields{
 					"last_state": fsm.state.String(),
 					"new_state":  next.String(),
+					"event":      evnt.Name,
 					"reason":     reason,
 				}).Error("State transition is not allowed")
 			}
@@ -124,6 +137,7 @@ func (fsm *FSM) Run() {
 			log.WithFields(log.Fields{
 				"current_state": fsm.state.String(),
 				"new_state":     next.String(),
+				"event":         evnt.Name,
 				"reason":        reason,
 			}).Info("State change")
 		}
