@@ -119,6 +119,11 @@ func (fsm *FSM) Run() {
 				}).Info("Finite")
 			}
 
+			fsm.mu.Lock()
+			fsm.state = next
+			fsm.mu.Unlock()
+
+			// This break ends the finite state machine...
 			break
 		}
 

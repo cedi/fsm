@@ -19,13 +19,13 @@ func IdleState() string {
 }
 
 // Do work
-func (s idleState) Run(last fsm.State) (fsm.State, string) {
+func (s idleState) Run(lastS fsm.State, lastE fsm.Event) (fsm.State, fsm.Event, string) {
 	for {
-		event := <-s.fsm.Events
+		event := <-s.fsm.InEvents
 
 		switch event.Name {
 		case "connect":
-			return newConnectedState(s.fsm), "Client connected"
+			return newConnectedState(s.fsm), event, "Client connected"
 
 		default:
 			log.WithField("event", event).Warn("unknown event")
@@ -61,13 +61,13 @@ func ConnectedState() string {
 }
 
 // Do work
-func (s connectedState) Run(last fsm.State) (fsm.State, string) {
+func (s connectedState) Run(lastS fsm.State, lastE fsm.Event) (fsm.State, fsm.Event, string) {
 	for {
-		event := <-s.fsm.Events
+		event := <-s.fsm.InEvents
 
 		switch event.Name {
 		case "disconnect":
-			return fsm.NewFiniteState(s.fsm), "Client disconnected"
+			return fsm.NewFiniteState(s.fsm), event, "Client disconnected"
 
 		default:
 			log.WithField("event", event).Warn("unknown event")
@@ -102,14 +102,14 @@ func main() {
 
 	go func(f *fsm.FSM) {
 		for {
-			f.Events <- fsm.Event{Name: "connect", Data: nil}
-			f.Events <- fsm.Event{Name: "foo", Data: nil}
+			f.InEvents <- fsm.Event{Name: "connect", Data: nil}
+			f.InEvents <- fsm.Event{Name: "foo", Data: nil}
 			time.Sleep(2 * time.Second)
 
-			f.Events <- fsm.Event{Name: "bar", Data: nil}
+			f.InEvents <- fsm.Event{Name: "bar", Data: nil}
 			time.Sleep(2 * time.Second)
 
-			f.Events <- fsm.Event{Name: "disconnect", Data: nil}
+			f.InEvents <- fsm.Event{Name: "disconnect", Data: nil}
 		}
 	}(f)
 

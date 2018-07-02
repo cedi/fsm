@@ -16,13 +16,13 @@ func IdleState() string {
 }
 
 // Do work
-func (s idleState) Run(last State) (State, string) {
+func (s idleState) Run(lastS State, lastE Event) (State, Event, string) {
 	for {
-		event := <-s.fsm.Events
+		event := <-s.fsm.InEvents
 
 		switch event.Name {
 		case "connect":
-			return newConnectedState(s.fsm), "Client connected"
+			return newConnectedState(s.fsm), lastE, "Client connected"
 
 		default:
 			continue
@@ -57,13 +57,13 @@ func ConnectedState() string {
 }
 
 // Do work
-func (s connectedState) Run(last State) (State, string) {
+func (s connectedState) Run(lastS State, lastE Event) (State, Event, string) {
 	for {
-		event := <-s.fsm.Events
+		event := <-s.fsm.InEvents
 
 		switch event.Name {
 		case "disconnect":
-			return newIdleState(s.fsm), "Client disconnected"
+			return newIdleState(s.fsm), lastE, "Client disconnected"
 
 		default:
 			continue
@@ -95,7 +95,7 @@ func BenchmarkStateChanges(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		f.Events <- Event{Name: "connect"}
-		f.Events <- Event{Name: "disconnect"}
+		f.InEvents <- Event{Name: "connect"}
+		f.InEvents <- Event{Name: "disconnect"}
 	}
 }

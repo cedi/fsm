@@ -23,10 +23,8 @@ func (r *FsmRules) IsTransitionAllowed(from State, to State) bool {
 		return r.whitelist
 	}
 
-	// if the entry is not in the rule set
-	// in case of a whitelist we deny this state transition
-	// in case of a blacklist we allow this state transition
-	return !r.whitelist
+	// i can never reach this point...
+	return false
 }
 
 // Add a transition to validate
