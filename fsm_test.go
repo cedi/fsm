@@ -17,8 +17,8 @@ func TestEventCompare(t *testing.T) {
 }
 
 func TestFiniteState(t *testing.T) {
-	finite := NewFiniteState(nil)
-	finite2 := NewFiniteState(nil)
+	finite := NewFiniteState()
+	finite2 := NewFiniteState()
 
 	assert.True(t, finite.String() == Finite)
 	assert.True(t, finite.Compare(finite2))
@@ -49,7 +49,7 @@ func (s fooState) Run(lastS State, lastE Event) (State, Event, string) {
 			return newFooState(s.fsm), event, "Client connected"
 
 		case "disconnect":
-			return NewFiniteState(s.fsm), event, "Client disconnected"
+			return NewFiniteState(), event, "Client disconnected"
 
 		default:
 			continue

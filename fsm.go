@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/cedi/logrus"
 )
 
 const (
@@ -40,7 +40,6 @@ type State interface {
 }
 
 type FiniteState struct {
-	fsm *FSM
 }
 
 func (s FiniteState) Run(lastS State, lastE Event) (State, Event, string) {
@@ -55,8 +54,8 @@ func (s FiniteState) String() string {
 	return Finite
 }
 
-func NewFiniteState(fsm *FSM) *FiniteState {
-	return &FiniteState{fsm: fsm}
+func NewFiniteState() *FiniteState {
+	return &FiniteState{}
 }
 
 type FSM struct {
@@ -105,7 +104,7 @@ func (fsm *FSM) State() State {
 func (fsm *FSM) Run() {
 	var last State
 	var evnt Event
-	finiteState := NewFiniteState(fsm)
+	finiteState := NewFiniteState()
 
 	for {
 		next, evnt, reason := fsm.state.Run(last, evnt)

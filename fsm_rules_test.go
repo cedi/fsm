@@ -28,9 +28,12 @@ func TestWhitelistRuleset(t *testing.T) {
 
 	a := MockState{name: "A"}
 	b := MockState{name: "B"}
+	c := MockState{name: "C"}
 
 	whitelist.AddTransition(a.String(), b.String())
+
 	assert.True(t, whitelist.IsTransitionAllowed(a, b))
+	assert.False(t, whitelist.IsTransitionAllowed(a, c))
 	assert.False(t, whitelist.IsTransitionAllowed(b, a))
 
 }
@@ -41,8 +44,10 @@ func TestEmptyWhiteRuleset(t *testing.T) {
 
 	a := MockState{name: "A"}
 	b := MockState{name: "B"}
+	c := MockState{name: "C"}
 
 	assert.False(t, whitelist.IsTransitionAllowed(a, b))
+	assert.False(t, whitelist.IsTransitionAllowed(c, c))
 	assert.False(t, whitelist.IsTransitionAllowed(b, a))
 }
 
@@ -52,9 +57,11 @@ func TestBlacklistRuleset(t *testing.T) {
 
 	a := MockState{name: "A"}
 	b := MockState{name: "B"}
+	c := MockState{name: "C"}
 
 	blacklist.AddTransition(a.String(), b.String())
 	assert.False(t, blacklist.IsTransitionAllowed(a, b))
+	assert.True(t, blacklist.IsTransitionAllowed(a, c))
 	assert.True(t, blacklist.IsTransitionAllowed(b, a))
 }
 
@@ -64,7 +71,9 @@ func TestEmptyBlacklistRuleset(t *testing.T) {
 
 	a := MockState{name: "A"}
 	b := MockState{name: "B"}
+	c := MockState{name: "C"}
 
 	assert.True(t, blacklist.IsTransitionAllowed(a, b))
+	assert.True(t, blacklist.IsTransitionAllowed(a, c))
 	assert.True(t, blacklist.IsTransitionAllowed(b, a))
 }

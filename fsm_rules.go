@@ -23,8 +23,8 @@ func (r *FsmRules) IsTransitionAllowed(from State, to State) bool {
 		return r.whitelist
 	}
 
-	// i can never reach this point...
-	return false
+	// If the entry exists as correct from state, but the to state is not there
+	return !r.whitelist
 }
 
 // Add a transition to validate

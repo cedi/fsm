@@ -67,7 +67,7 @@ func (s connectedState) Run(lastS fsm.State, lastE fsm.Event) (fsm.State, fsm.Ev
 
 		switch event.Name {
 		case "disconnect":
-			return fsm.NewFiniteState(s.fsm), event, "Client disconnected"
+			return fsm.NewFiniteState(), event, "Client disconnected"
 
 		default:
 			log.WithField("event", event).Warn("unknown event")
