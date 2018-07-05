@@ -11,13 +11,16 @@ const (
 	Finite = "Finite"
 )
 
-// Event
+// event
 type Event struct {
-	// Name of the Event
+	// Name of the event
 	Name string
 
 	// Payload
 	Data interface{}
+
+	// Output Chan
+	OutEvents chan Event
 }
 
 func (e Event) Compare(to Event) bool {
@@ -29,7 +32,7 @@ type State interface {
 	// Execute the work in this State.
 	// To transition into the next state, return the new state and give a reason
 	// lastS: the previous state. For the initial state: empty
-	// lastE: the previous Event. For the initial state: empty
+	// lastE: the previous event. For the initial state: empty
 	Run(lastS State, lastE Event) (State, Event, string)
 
 	// MUST return true if "to" is the same state
@@ -65,7 +68,7 @@ type FSM struct {
 	log   bool
 	mu    sync.RWMutex
 
-	// Event-Handling
+	// event-Handling
 	InEvents  chan Event
 	OutEvents chan Event
 }
@@ -101,6 +104,27 @@ func (fsm *FSM) State() State {
 	return fsm.state
 }
 
+// Send a event to the FSM
+//
+//	name: the name of the event
+//	data: the payload of the event
+//
+//	return: the output chanel for returning events from the fsm
+func (fsm *FSM) SendEvent(name string, data interface{}) chan Event {
+	outevents := make(chan Event)
+
+	event := Event{
+		Name:      name,
+		Data:      data,
+		OutEvents: outevents,
+	}
+
+	fsm.InEvents <- event
+
+	return outevents
+}
+
+// Should be called in a seperate go-routine
 func (fsm *FSM) Run() {
 	var last State
 	var evnt Event

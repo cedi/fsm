@@ -91,11 +91,12 @@ func BenchmarkStateChanges(b *testing.B) {
 	f := NewNonLoggingFSM(nil)
 	f.SetIdleState(newIdleState(f))
 
+	b.ResetTimer()
 	go f.Run()
 
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		f.InEvents <- Event{Name: "connect"}
 		f.InEvents <- Event{Name: "disconnect"}
 	}
+
 }

@@ -78,8 +78,8 @@ func TestStateTransition(t *testing.T) {
 	f.SetIdleState(newFooState(f))
 
 	go func(f *FSM) {
-		f.InEvents <- Event{Name: "connect", Data: nil}
-		f.InEvents <- Event{Name: "disconnect", Data: nil}
+		f.SendEvent("connect", nil)
+		f.SendEvent("disconnect", nil)
 	}(f)
 
 	f.Run()
