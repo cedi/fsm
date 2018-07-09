@@ -110,7 +110,7 @@ func (fsm *FSM) State() State {
 //	data: the payload of the event
 //
 //	return: the output chanel for returning events from the fsm
-func (fsm *FSM) SendEvent(name string, data interface{}) chan Event {
+func (fsm *FSM) SendEventToFsm(name string, data interface{}) chan Event {
 	outevents := make(chan Event)
 
 	event := Event{
@@ -120,6 +120,26 @@ func (fsm *FSM) SendEvent(name string, data interface{}) chan Event {
 	}
 
 	fsm.InEvents <- event
+
+	return outevents
+}
+
+// Send a event from the FSM to the outside world
+//
+//	name: the name of the event
+//	data: the payload of the event
+//
+//	return: the output chanel for returning events to the fsm
+func (fsm *FSM) SendEventFromFsm(name string, data interface{}) chan Event {
+	outevents := make(chan Event)
+
+	event := Event{
+		Name:      name,
+		Data:      data,
+		OutEvents: outevents,
+	}
+
+	fsm.OutEvents <- event
 
 	return outevents
 }
