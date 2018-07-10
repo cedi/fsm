@@ -97,7 +97,8 @@ func main() {
 	rules.AddTransition(IdleState(), ConnectedState())
 	rules.AddTransition(ConnectedState(), IdleState())
 
-	f := fsm.NewLoggingFSM(rules)
+	logger := log.WithField("example", "true")
+	f := fsm.NewLoggingFSM(rules, logger)
 	f.SetIdleState(newIdleState(f))
 
 	go func(f *fsm.FSM) {

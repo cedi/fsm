@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/cedi/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -65,29 +65,31 @@ type FSM struct {
 	errs  chan error
 	state State
 	rules *FsmRules
-	log   bool
 	mu    sync.RWMutex
 
 	// event-Handling
 	InEvents  chan Event
 	OutEvents chan Event
+
+	// Logging
+	Logger *log.Entry
 }
 
-func NewLoggingFSM(rules *FsmRules) *FSM {
-	return NewFSM(rules, true)
+func NewLoggingFSM(rules *FsmRules, logger *log.Entry) *FSM {
+	return NewFSM(rules, logger)
 }
 
 func NewNonLoggingFSM(rules *FsmRules) *FSM {
-	return NewFSM(rules, false)
+	return NewFSM(rules, nil)
 }
 
-func NewFSM(rules *FsmRules, log bool) *FSM {
+func NewFSM(rules *FsmRules, logger *log.Entry) *FSM {
 	return &FSM{
 		InEvents:  make(chan Event),
 		OutEvents: make(chan Event),
 		errs:      make(chan error),
 		rules:     rules,
-		log:       log,
+		Logger:    logger,
 	}
 }
 
@@ -111,6 +113,10 @@ func (fsm *FSM) State() State {
 //
 //	return: the output chanel for returning events from the fsm
 func (fsm *FSM) SendEventToFsm(name string, data interface{}) chan Event {
+	if fsm.Logger != nil {
+		fsm.Logger.WithField("event", name).Trace("Send event to FSM")
+	}
+
 	outevents := make(chan Event)
 
 	event := Event{
@@ -131,6 +137,10 @@ func (fsm *FSM) SendEventToFsm(name string, data interface{}) chan Event {
 //
 //	return: the output chanel for returning events to the fsm
 func (fsm *FSM) SendEventFromFsm(name string, data interface{}) chan Event {
+	if fsm.Logger != nil {
+		fsm.Logger.WithField("event", name).Trace("Send event from FSM")
+	}
+
 	outevents := make(chan Event)
 
 	event := Event{
@@ -153,8 +163,8 @@ func (fsm *FSM) Run() {
 	for {
 		next, evnt, reason := fsm.state.Run(last, evnt)
 		if next.Compare(finiteState) {
-			if fsm.log {
-				log.WithFields(log.Fields{
+			if fsm.Logger != nil {
+				fsm.Logger.WithFields(log.Fields{
 					"current_state": fsm.state.String(),
 					"new_state":     next.String(),
 					"event":         evnt.Name,
@@ -171,8 +181,8 @@ func (fsm *FSM) Run() {
 		}
 
 		if fsm.rules != nil && !fsm.rules.IsTransitionAllowed(fsm.state, next) {
-			if fsm.log {
-				log.WithFields(log.Fields{
+			if fsm.Logger != nil {
+				fsm.Logger.WithFields(log.Fields{
 					"last_state": fsm.state.String(),
 					"new_state":  next.String(),
 					"event":      evnt.Name,
@@ -181,8 +191,8 @@ func (fsm *FSM) Run() {
 			}
 		}
 
-		if fsm.log {
-			log.WithFields(log.Fields{
+		if fsm.Logger != nil {
+			fsm.Logger.WithFields(log.Fields{
 				"current_state": fsm.state.String(),
 				"new_state":     next.String(),
 				"event":         evnt.Name,
