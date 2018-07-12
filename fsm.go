@@ -4,75 +4,25 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/cedi/logrus"
 )
-
-const (
-	Finite = "Finite"
-)
-
-// event
-type Event struct {
-	// Name of the event
-	Name string
-
-	// Payload
-	Data interface{}
-
-	// Output Chan
-	OutEvents chan Event
-}
-
-func (e Event) Compare(to Event) bool {
-	return e.Name == to.Name
-}
-
-// Generic State Interface
-type State interface {
-	// Execute the work in this State.
-	// To transition into the next state, return the new state and give a reason
-	// lastS: the previous state. For the initial state: empty
-	// lastE: the previous event. For the initial state: empty
-	Run(lastS State, lastE Event) (State, Event, string)
-
-	// MUST return true if "to" is the same state
-	Compare(to State) bool
-
-	// return the State-Name as String
-	String() string
-}
-
-type FiniteState struct {
-}
-
-func (s FiniteState) Run(lastS State, lastE Event) (State, Event, string) {
-	return s, Event{}, Finite
-}
-
-func (s FiniteState) Compare(to State) bool {
-	return s.String() == to.String()
-}
-
-func (s FiniteState) String() string {
-	return Finite
-}
-
-func NewFiniteState() *FiniteState {
-	return &FiniteState{}
-}
 
 type FSM struct {
-	errs  chan error
+	// State Machine
 	state State
 	rules *FsmRules
 	mu    sync.RWMutex
 
-	// event-Handling
+	// Event-Handling
 	InEvents  chan Event
 	OutEvents chan Event
 
 	// Logging
 	Logger *log.Entry
+
+	// State Data
+	Data   interface{}
+	DataMu sync.RWMutex
 }
 
 func NewLoggingFSM(rules *FsmRules, logger *log.Entry) *FSM {
@@ -87,7 +37,6 @@ func NewFSM(rules *FsmRules, logger *log.Entry) *FSM {
 	return &FSM{
 		InEvents:  make(chan Event),
 		OutEvents: make(chan Event),
-		errs:      make(chan error),
 		rules:     rules,
 		Logger:    logger,
 	}
