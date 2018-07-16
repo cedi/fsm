@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/cedi/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type FSM struct {
