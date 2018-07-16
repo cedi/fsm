@@ -119,13 +119,21 @@ func (fsm *FSM) Run() {
 					"event":         evnt.Name,
 					"reason":        reason,
 				}).Info("Finite")
+
 			}
 
 			fsm.mu.Lock()
 			fsm.state = next
 			fsm.mu.Unlock()
 
-			// This break ends the finite state machine...
+			// Run the finite state to perform some potential cleanup stuff
+			fsm.state.Run(last, evnt)
+
+			// close all channels
+			close(fsm.InEvents)
+			close(fsm.OutEvents)
+
+			// This ends the finite state machine...
 			break
 		}
 
