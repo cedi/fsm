@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/cedi/logrus"
 )
 
 type FSM struct {
@@ -14,7 +14,9 @@ type FSM struct {
 	mu    sync.RWMutex
 
 	// Event-Handling
+	InMu      sync.RWMutex
 	InEvents  chan Event
+	OutMu     sync.RWMutex
 	OutEvents chan Event
 
 	// Logging
@@ -74,9 +76,17 @@ func (fsm *FSM) SendEventToFsm(name string, data interface{}) chan Event {
 		OutEvents: outevents,
 	}
 
+	fsm.InMu.RLock()
+	if fsm.InEvents == nil {
+		fsm.InMu.RUnlock()
+		return nil
+	}
+
 	fsm.InEvents <- event
+	fsm.InMu.RUnlock()
 
 	return outevents
+
 }
 
 // Send a event from the FSM to the outside world
@@ -98,7 +108,14 @@ func (fsm *FSM) SendEventFromFsm(name string, data interface{}) chan Event {
 		OutEvents: outevents,
 	}
 
+	fsm.OutMu.RLock()
+	if fsm.OutEvents == nil {
+		fsm.OutMu.RUnlock()
+		return nil
+	}
+
 	fsm.OutEvents <- event
+	fsm.OutMu.RUnlock()
 
 	return outevents
 }
@@ -130,8 +147,13 @@ func (fsm *FSM) Run() {
 			fsm.state.Run(last, evnt)
 
 			// close all channels
+			fsm.InMu.Lock()
 			close(fsm.InEvents)
+			fsm.InMu.Unlock()
+
+			fsm.OutMu.Lock()
 			close(fsm.OutEvents)
+			fsm.OutMu.Unlock()
 
 			// This ends the finite state machine...
 			break
